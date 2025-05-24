@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chương Trình Đào Tạo</title>
+</head>
+<body>
+  <h1>Nhập Chương Trình Đào Tạo</h1>
+  <% if (message) { %>
+    <p style="color: green"><%= message %></p>
+  <% } %>
+  <form method="POST" action="/save">
+    <label>Mã Khối:</label><input name="MaKhoi" required><br>
+    <label>Mã Ngành Chương Trình:</label><input name="MaNgChng"><br>
+    <label>Bậc Đào Tạo:</label><input name="BacDaoTao"><br>
+    <label>Hệ Đào Tạo:</label><input name="HeDaoTao"><br>
+    <label>Mã Đơn Vị:</label><input name="MaDV"><br>
+    <label>Học Kỳ Vào:</label><input type="number" name="HocKyVao"><br>
+    <button type="submit">Lưu</button>
+  </form>
+</body>
+</html>
