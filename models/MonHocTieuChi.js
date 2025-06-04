@@ -5,7 +5,7 @@ const MonHocTieuChiSchema = new mongoose.Schema({
     MaTieuChi: { type: String, required: true },
     MaMH: { type: String, required: true },
     LoaiDiem: String,
-    DiemChon: Number,
+    DiemChon: { type: Number, required: false },
     TrongSo: Number,
     NgayTao: { type: Date, default: Date.now }
 }, {

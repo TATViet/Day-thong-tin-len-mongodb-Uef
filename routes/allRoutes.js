@@ -25,6 +25,8 @@ const importChuongTrinhController = require('../controllers/importChuongTrinhCon
 const importTieuChiDauRaController = require('../controllers/importTieuChiDauRaController');
 const importMonHocTieuChiController = require('../controllers/importMonHocTieuChiController');
 const importDiemSinhVienController = require('../controllers/importDiemSinhVienController');
+const updateDiemChonController = require('../controllers/updateDiemChonController');
+const TyTrongChuan = require('../controllers/importTyTrongChuanController.js');
 
 
 // Main route for all forms
@@ -60,6 +62,9 @@ router.post('/tieuchidaura/save', TieuChiDauRaController.save);
 // Tính Điểm Tiêu Chí routes
 router.post('/tinhdiemtieuchi/save', TinhDiemTieuChiController.save);
 
+// Route để cập nhật DiemChon từ ChuongTrinh
+router.post('/update-diem-chon', updateDiemChonController.updateDiemChonFromChuongTrinh);
+
 // Import routes
 // router.post('/import/hiendiensv', upload.single('excelFile'), importController.importHienDienSV);
 //router.post('/import/donvi', upload.single('excelFile'), importController.importDonVi);
@@ -78,5 +83,8 @@ router.post('/import/chuongtrinh', upload.single('excelFile'), importChuongTrinh
 router.post('/import/tieuchidaura', upload.single('excelFile'), importTieuChiDauRaController.importFromExcel);
 router.post('/import/monhoctieuchi', upload.single('excelFile'), importMonHocTieuChiController.importFromExcel);
 router.post('/import/diemsinhvien', upload.single('excelFile'), importDiemSinhVienController.importFromExcel);
+router.post('/import/TyTrongChuan', upload.single('excelFile'), TyTrongChuan.importFromExcel);
+// routes/allRoutes.js
+router.post('/debug-data-flow', updateDiemChonController.debugDataFlow);
 
 module.exports = router;

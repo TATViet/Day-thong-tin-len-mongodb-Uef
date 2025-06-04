@@ -4,6 +4,38 @@ const fs = require('fs');
 const path = require('path');
 const MonHocTieuChi = require('../models/MonHocTieuChi');
 
+// Hàm làm sạch dữ liệu
+const cleanStringData = (value) => {
+    if (value === null || value === undefined) {
+        return '';
+    }
+    // Chuyển về string và loại bỏ khoảng trắng ở đầu và cuối
+    return String(value).trim();
+};
+
+const cleanNumericData = (value) => {
+    if (value === null || value === undefined) {
+        return null;
+    }
+    
+    // Nếu là số thì trả về luôn
+    if (typeof value === 'number') {
+        return value;
+    }
+    
+    // Nếu là string thì trim và chuyển về số
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (trimmed === '') {
+            return null;
+        }
+        const num = Number(trimmed);
+        return isNaN(num) ? null : num;
+    }
+    
+    return null;
+};
+
 exports.importFromExcel = async (req, res) => {
     try {
         if (!req.file) {
@@ -42,9 +74,13 @@ exports.importFromExcel = async (req, res) => {
         const headers = data[0];
         console.log('Header:', headers);
 
-        // Xác định các vị trí cột dựa vào header
+        // Làm sạch header (loại bỏ khoảng trắng)
+        const cleanHeaders = headers.map(header => cleanStringData(header));
+        console.log('Clean Header:', cleanHeaders);
+
+        // Xác định các vị trí cột dựa vào header đã được làm sạch
         const headerMap = {};
-        headers.forEach((header, index) => {
+        cleanHeaders.forEach((header, index) => {
             headerMap[header] = index;
         });
 
@@ -73,57 +109,45 @@ exports.importFromExcel = async (req, res) => {
                     continue;
                 }
 
-                // Tạo đối tượng dữ liệu từ dòng, sử dụng headerMap
+                // Tạo đối tượng dữ liệu từ dòng, sử dụng headerMap và làm sạch dữ liệu
                 const monHocTieuChiData = {};
 
-                // Trích xuất dữ liệu từ các cột theo header
+                // Trích xuất dữ liệu từ các cột theo header và làm sạch
                 for (const [header, index] of Object.entries(headerMap)) {
                     if (index < row.length && row[index] !== undefined) {
-                        monHocTieuChiData[header] = row[index];
+                        // Làm sạch dữ liệu ngay khi trích xuất
+                        monHocTieuChiData[header] = cleanStringData(row[index]);
                     }
                 }
 
-                // Kiểm tra dữ liệu bắt buộc
+                // Kiểm tra dữ liệu bắt buộc sau khi đã làm sạch
                 if (!monHocTieuChiData.MaTieuChi || !monHocTieuChiData.MaMH) {
-                    console.log(`Bỏ qua dòng ${i+1}: Thiếu MaTieuChi hoặc MaMH`);
+                    console.log(`Bỏ qua dòng ${i+1}: Thiếu MaTieuChi hoặc MaMH sau khi làm sạch`);
                     continue;
                 }
 
-                // Xử lý các giá trị số
-                let diemChon = null;
-                if (monHocTieuChiData.DiemChon !== undefined) {
-                    if (typeof monHocTieuChiData.DiemChon === 'number') {
-                        diemChon = monHocTieuChiData.DiemChon;
-                    } else if (typeof monHocTieuChiData.DiemChon === 'string' && monHocTieuChiData.DiemChon.trim() !== '') {
-                        diemChon = Number(monHocTieuChiData.DiemChon);
-                        if (isNaN(diemChon)) {
-                            diemChon = null;
-                        }
-                    }
-                }
+                // Xử lý các giá trị số với làm sạch dữ liệu
+                //const diemChon = cleanNumericData(monHocTieuChiData.DiemChon);
+                const trongSo = cleanNumericData(monHocTieuChiData.TrongSo);
 
-                let trongSo = null;
-                if (monHocTieuChiData.TrongSo !== undefined) {
-                    if (typeof monHocTieuChiData.TrongSo === 'number') {
-                        trongSo = monHocTieuChiData.TrongSo;
-                    } else if (typeof monHocTieuChiData.TrongSo === 'string' && monHocTieuChiData.TrongSo.trim() !== '') {
-                        trongSo = Number(monHocTieuChiData.TrongSo);
-                        if (isNaN(trongSo)) {
-                            trongSo = null;
-                        }
-                    }
-                }
-
-                // Chuẩn bị đối tượng dữ liệu để lưu
+                // Chuẩn bị đối tượng dữ liệu để lưu (đã được làm sạch)
                 const monHocTieuChiRecord = {
-                    MaTieuChi: monHocTieuChiData.MaTieuChi.toString(),
-                    MaMH: monHocTieuChiData.MaMH.toString(),
-                    LoaiDiem: monHocTieuChiData.LoaiDiem ? monHocTieuChiData.LoaiDiem.toString() : '',
-                    ...(diemChon !== null && { DiemChon: diemChon }),
+                    MaTieuChi: cleanStringData(monHocTieuChiData.MaTieuChi),
+                    MaMH: cleanStringData(monHocTieuChiData.MaMH),
+                    LoaiDiem: cleanStringData(monHocTieuChiData.LoaiDiem),
+                    //...(diemChon !== null && { DiemChon: diemChon }),
                     ...(trongSo !== null && { TrongSo: trongSo })
                 };
 
-                console.log(`Đang xử lý dòng ${i+1}:`, monHocTieuChiRecord);
+                // Log dữ liệu trước và sau khi làm sạch để debug
+                console.log(`Dòng ${i+1} - Trước khi làm sạch:`, {
+                    MaTieuChi: `"${row[headerMap['MaTieuChi']]}"`,
+                    MaMH: `"${row[headerMap['MaMH']]}"`
+                });
+                console.log(`Dòng ${i+1} - Sau khi làm sạch:`, {
+                    MaTieuChi: `"${monHocTieuChiRecord.MaTieuChi}"`,
+                    MaMH: `"${monHocTieuChiRecord.MaMH}"`
+                });
 
                 // Kiểm tra xem bản ghi đã tồn tại chưa dựa trên composite key
                 const existing = await MonHocTieuChi.findOne({
@@ -137,12 +161,12 @@ exports.importFromExcel = async (req, res) => {
                     if (diemChon !== null) existing.DiemChon = diemChon;
                     if (trongSo !== null) existing.TrongSo = trongSo;
                     await existing.save();
-                    console.log(`Đã cập nhật môn học tiêu chí: ${monHocTieuChiRecord.MaTieuChi} - ${monHocTieuChiRecord.MaMH}`);
+                    console.log(`Đã cập nhật môn học tiêu chí: "${monHocTieuChiRecord.MaTieuChi}" - "${monHocTieuChiRecord.MaMH}"`);
                 } else {
                     // Tạo bản ghi mới
                     const newMonHocTieuChi = new MonHocTieuChi(monHocTieuChiRecord);
                     await newMonHocTieuChi.save();
-                    console.log(`Đã tạo mới môn học tiêu chí: ${monHocTieuChiRecord.MaTieuChi} - ${monHocTieuChiRecord.MaMH}`);
+                    console.log(`Đã tạo mới môn học tiêu chí: "${monHocTieuChiRecord.MaTieuChi}" - "${monHocTieuChiRecord.MaMH}"`);
                 }
 
                 successCount++;
@@ -157,7 +181,7 @@ exports.importFromExcel = async (req, res) => {
         fs.unlinkSync(filePath);
 
         // Tạo thông báo kết quả
-        let message = `✅ Đã import thành công ${successCount} môn học tiêu chí.`;
+        let message = `✅ Đã import thành công ${successCount} môn học tiêu chí (dữ liệu đã được làm sạch).`;
         if (errorCount > 0) {
             message += ` ❌ Có ${errorCount} lỗi.`;
             if (errors.length > 0) {

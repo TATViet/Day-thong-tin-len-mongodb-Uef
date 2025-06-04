@@ -61,9 +61,27 @@ exports.importFromExcel = async (req, res) => {
         const MAX_CONCURRENT_BATCHES = 5; // Số lượng batch xử lý song song tối đa
 
         // Hàm chuyển đổi dữ liệu thô thành đối tượng DiemSinhVien
+        // Hàm chuyển đổi dữ liệu thô thành đối tượng DiemSinhVien
         const convertRowToDiemSinhVien = (row) => {
             // Bỏ qua dòng trống
             if (!row || row.length < 8 || !row[0] || !row[1] || !row[2]) return null;
+
+            // Hàm helper để xử lý điểm số
+            const processScore = (value) => {
+                // Nếu undefined hoặc null
+                if (value === undefined || value === null) return '0';
+                
+                // Chuyển thành string và trim
+                const stringValue = String(value).trim();
+                
+                // Nếu rỗng hoặc "V" hoặc "v" (không phân biệt hoa thường)
+                if (stringValue === '' || stringValue.toLowerCase() === 'v') {
+                    return '0';
+                }
+                
+                // Trả về giá trị gốc (đã trim)
+                return stringValue;
+            };
 
             // Mặc định NamHK là năm hiện tại nếu không có
             let namHK = new Date().getFullYear();
@@ -78,11 +96,7 @@ exports.importFromExcel = async (req, res) => {
                 }
             }
 
-            // Dựa vào ảnh bạn cung cấp, cấu trúc dữ liệu là:
-            // MaSV, MaMH, NhomHoc, QuaTrinh, GiuaKy, CuoiKy, DiemHP, DiemSoHP
-            // Chúng ta sẽ map chúng tương ứng vào các vị trí của row
-
-            // Trả về đối tượng
+            // Trả về đối tượng với điểm số đã được xử lý
             return {
                 MaSV: String(row[0]),
                 MaMH: String(row[1]),
@@ -92,12 +106,12 @@ exports.importFromExcel = async (req, res) => {
                     MaSV: String(row[0]),
                     MaMH: String(row[1]),
                     NhomHoc: String(row[2]),
-                    QuaTrinh: row[3] !== undefined ? String(row[3]) : '',
-                    GiuaKy: row[4] !== undefined ? String(row[4]) : '',
-                    CuoiKy: row[5] !== undefined ? String(row[5]) : '',
-                    DiemHP: row[6] !== undefined ? String(row[6]) : '',
-                    DiemSoHP: row[7] !== undefined ? String(row[7]) : '',
-                    DiemChuHP: row[8] !== undefined ? String(row[8]) : '',
+                    QuaTrinh: processScore(row[3]),      // SỬ DỤNG processScore
+                    GiuaKy: processScore(row[4]),        // SỬ DỤNG processScore
+                    CuoiKy: processScore(row[5]),        // SỬ DỤNG processScore
+                    DiemHP: processScore(row[6]),        // SỬ DỤNG processScore
+                    DiemSoHP: processScore(row[7]),      // SỬ DỤNG processScore
+                    DiemChuHP: processScore(row[8]),     // SỬ DỤNG processScore
                     NamHK: namHK
                 }
             };

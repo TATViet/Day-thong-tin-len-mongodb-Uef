@@ -52,6 +52,7 @@ exports.importFromExcel = async (req, res) => {
                 const BacDaoTao = row[2] ? row[2].toString() : '';
                 const HeDaoTao = row[3] ? row[3].toString() : '';
                 const MaDV = row[4] ? row[4].toString() : '';
+                const DiemChon = row[6] ? row [6].toString() :'';
                 let HocKyVao = null;
 
                 // Chuyển đổi HocKyVao thành số nếu có giá trị
@@ -79,6 +80,7 @@ exports.importFromExcel = async (req, res) => {
                     existing.BacDaoTao = BacDaoTao;
                     existing.HeDaoTao = HeDaoTao;
                     existing.MaDV = MaDV;
+                    existing.DiemChon = DiemChon;
                     if (HocKyVao !== null) {
                         existing.HocKyVao = HocKyVao;
                     }
@@ -92,6 +94,7 @@ exports.importFromExcel = async (req, res) => {
                         BacDaoTao,
                         HeDaoTao,
                         MaDV,
+                        DiemChon,
                         ...(HocKyVao !== null && { HocKyVao })
                     });
                     await newChuongTrinh.save();
@@ -114,7 +117,7 @@ exports.importFromExcel = async (req, res) => {
         if (errorCount > 0) {
             message += ` ❌ Có ${errorCount} lỗi.`;
             if (errors.length > 0) {
-                message += ` Chi tiết: ${errors.slice(0, 5).join('; ')}${errors.length > 5 ? '...' : ''}`;
+                message += ` Chi tiết: ${errors.slice(0, 6).join('; ')}${errors.length > 6 ? '...' : ''}`;
             }
         }
 

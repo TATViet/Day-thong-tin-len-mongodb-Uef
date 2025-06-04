@@ -7,6 +7,7 @@ const ChuongTrinhSchema = new mongoose.Schema({
     HeDaoTao: String,
     MaDV: String,
     HocKyVao: Number,
+    DiemChon: Number,
     NgayTao: { type: Date, default: Date.now }
 });
 
